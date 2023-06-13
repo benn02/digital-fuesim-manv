@@ -1,0 +1,129 @@
+<ng-container
+    *ngIf="
+        managedSimulatedPatientTrays$ | async as managedSimulatedPatientTrays
+    "
+>
+    <table class="table" *ngIf="managedSimulatedPatientTrays.length > 0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Entfernen</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let managedPatientTray of managedSimulatedPatientTrays">
+                <th scope="row">{{ managedPatientTray.name }}</th>
+
+                <td>
+                    <button
+                        class="btn btn-outline-danger"
+                        type="button"
+                        (click)="removePatientTray(managedPatientTray.id)"
+                    >
+                        <span class="bi-trash"></span>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</ng-container>
+
+<div
+    *ngIf="
+        possibleNewSimulatedRegionsToAssign$
+            | async as possibleNewSimulatedRegionsToAssign
+    "
+    ngbDropdown
+    placement="bottom-start"
+    autoClose="outside"
+    class="d-inline-block overflow-visible text-center mb-3"
+>
+    <button
+        ngbDropdownToggle
+        type="button"
+        class="btn btn-outline-primary"
+        [disabled]="possibleNewSimulatedRegionsToAssign.length === 0"
+    >
+        <span class="bi-plus me-1"></span>
+        Weitere Patientenablage hinzufügen
+    </button>
+    <div *ngIf="possibleNewSimulatedRegionsToAssign.length > 0" ngbDropdownMenu>
+        <button
+            *ngFor="
+                let possibleNewSimulatedRegionToAssign of possibleNewSimulatedRegionsToAssign
+            "
+            ngbDropdownItem
+            class="dropdown-item"
+            type="button"
+            (click)="addPatientTray(possibleNewSimulatedRegionToAssign.id)"
+        >
+            <span class="bi-plus me-1"></span>
+            {{ possibleNewSimulatedRegionToAssign.name }}
+        </button>
+    </div>
+</div>
+
+<ng-container
+    *ngIf="
+        managedSimulatedStagingAreas$ | async as managedSimulatedStagingAreas
+    "
+>
+    <table class="table" *ngIf="managedSimulatedStagingAreas.length > 0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Entfernen</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let managedStagingArea of managedSimulatedStagingAreas">
+                <th scope="row">{{ managedStagingArea.name }}</th>
+
+                <td>
+                    <button
+                        class="btn btn-outline-danger"
+                        type="button"
+                        (click)="removeStagingArea(managedStagingArea.id)"
+                    >
+                        <span class="bi-trash"></span>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</ng-container>
+
+<div
+    *ngIf="
+        possibleNewSimulatedRegionsToAssign$
+            | async as possibleNewSimulatedRegionsToAssign
+    "
+    ngbDropdown
+    placement="bottom-start"
+    autoClose="outside"
+    class="d-inline-block overflow-visible text-center mb-3"
+>
+    <button
+        ngbDropdownToggle
+        type="button"
+        class="btn btn-outline-primary"
+        [disabled]="possibleNewSimulatedRegionsToAssign.length === 0"
+    >
+        <span class="bi-plus me-1"></span>
+        Weiteren Bereitstellungsraum hinzufügen
+    </button>
+    <div *ngIf="possibleNewSimulatedRegionsToAssign.length > 0" ngbDropdownMenu>
+        <button
+            *ngFor="
+                let possibleNewSimulatedRegionToAssign of possibleNewSimulatedRegionsToAssign
+            "
+            ngbDropdownItem
+            class="dropdown-item"
+            type="button"
+            (click)="addStagingArea(possibleNewSimulatedRegionToAssign.id)"
+        >
+            <span class="bi-plus me-1"></span>
+            {{ possibleNewSimulatedRegionToAssign.name }}
+        </button>
+    </div>
+</div>

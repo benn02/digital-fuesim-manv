@@ -11,6 +11,7 @@ import { requestBehavior } from './request';
 import { transferBehavior } from './transfer';
 import { transferToHospitalBehavior } from './transfer-to-hospital';
 import { managePatientTransportToHospitalBehavior } from './manage-patient-transport-to-hospital';
+import { commandBehavior } from './command';
 
 export const simulationBehaviors = {
     automaticallyDistributeVehiclesBehavior,
@@ -24,6 +25,7 @@ export const simulationBehaviors = {
     transferBehavior,
     transferToHospitalBehavior,
     managePatientTransportToHospitalBehavior,
+    commandBehavior,
 };
 
 export type ExerciseSimulationBehavior =

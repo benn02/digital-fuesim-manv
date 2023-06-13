@@ -81,6 +81,11 @@
                     [simulatedRegionId]="simulatedRegion.id"
                     [behaviorId]="selectedBehavior!.id"
                 />
+                <app-simulated-region-overview-behavior-command
+                    *ngSwitchCase="'commandBehavior'"
+                    [simulatedRegionId]="simulatedRegion.id"
+                    [commandBehaviorId]="selectedBehavior!.id"
+                />
                 <p *ngSwitchDefault class="text-muted font-bold">
                     Es ist noch keine Verhaltensweise ausgewählt.
                 </p>

@@ -5,6 +5,7 @@ import type {
     Mutable,
 } from 'digital-fuesim-manv-shared';
 import {
+    CommandBehaviorState,
     TransferToHospitalBehaviorState,
     ManagePatientTransportToHospitalBehaviorState,
     TransferBehaviorState,
@@ -84,6 +85,17 @@ const stereotypes: SimulatedRegion[] = [
             ReportBehaviorState.create(),
             ManagePatientTransportToHospitalBehaviorState.create(),
         ],
+        inEvents: [],
+        position,
+        size,
+    },
+    {
+        type: 'simulatedRegion',
+        id: '',
+        name: 'Einsatzleitung',
+        borderColor: '#ff0088',
+        activities: {},
+        behaviors: [CommandBehaviorState.create()],
         inEvents: [],
         position,
         size,

@@ -630,6 +630,62 @@ export class StopTransportAction implements Action {
     public readonly behaviorId!: UUID;
 }
 
+export class AddPatientTrayToCommandAction implements Action {
+    @IsValue('[CommandBehavior] Add Patient Tray')
+    public readonly type = '[CommandBehavior] Add Patient Tray';
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly simulatedRegionId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly behaviorId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly patientTrayId!: UUID;
+}
+
+export class AddStagingAreaToCommandAction implements Action {
+    @IsValue('[CommandBehavior] Add Staging Area')
+    public readonly type = '[CommandBehavior] Add Staging Area';
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly simulatedRegionId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly behaviorId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly stagingAreaId!: UUID;
+}
+
+export class RemovePatientTrayFromCommandAction implements Action {
+    @IsValue('[CommandBehavior] Remove Patient Tray')
+    public readonly type = '[CommandBehavior] Remove Patient Tray';
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly simulatedRegionId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly behaviorId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly patientTrayId!: UUID;
+}
+
+export class RemoveStagingAreaFromCommandAction implements Action {
+    @IsValue('[CommandBehavior] Remove Staging Area')
+    public readonly type = '[CommandBehavior] Remove Staging Area';
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly simulatedRegionId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly behaviorId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly stagingAreaId!: UUID;
+}
+
 export namespace SimulationActionReducers {
     export const updateTreatPatientsIntervals: ActionReducer<UpdateTreatPatientsIntervalsAction> =
         {
@@ -2273,4 +2329,84 @@ export namespace SimulationActionReducers {
         },
         rights: 'trainer',
     };
+
+    export const addPatientTrayToCommand: ActionReducer<AddPatientTrayToCommandAction> =
+        {
+            action: AddPatientTrayToCommandAction,
+            reducer(
+                draftState,
+                { simulatedRegionId, behaviorId, patientTrayId }
+            ) {
+                const behaviorState = getBehaviorById(
+                    draftState,
+                    simulatedRegionId,
+                    behaviorId,
+                    'commandBehavior'
+                );
+
+                behaviorState.patientTrays[patientTrayId] = true;
+                return draftState;
+            },
+            rights: 'trainer',
+        };
+
+    export const addStagingAreaToCommand: ActionReducer<AddStagingAreaToCommandAction> =
+        {
+            action: AddStagingAreaToCommandAction,
+            reducer(
+                draftState,
+                { simulatedRegionId, behaviorId, stagingAreaId }
+            ) {
+                const behaviorState = getBehaviorById(
+                    draftState,
+                    simulatedRegionId,
+                    behaviorId,
+                    'commandBehavior'
+                );
+
+                behaviorState.stagingAreas[stagingAreaId] = true;
+                return draftState;
+            },
+            rights: 'trainer',
+        };
+
+    export const removePatientTrayFromCommand: ActionReducer<RemovePatientTrayFromCommandAction> =
+        {
+            action: RemovePatientTrayFromCommandAction,
+            reducer(
+                draftState,
+                { simulatedRegionId, behaviorId, patientTrayId }
+            ) {
+                const behaviorState = getBehaviorById(
+                    draftState,
+                    simulatedRegionId,
+                    behaviorId,
+                    'commandBehavior'
+                );
+
+                delete behaviorState.patientTrays[patientTrayId];
+                return draftState;
+            },
+            rights: 'trainer',
+        };
+
+    export const removeStagingAreaFromCommand: ActionReducer<RemoveStagingAreaFromCommandAction> =
+        {
+            action: RemoveStagingAreaFromCommandAction,
+            reducer(
+                draftState,
+                { simulatedRegionId, behaviorId, stagingAreaId }
+            ) {
+                const behaviorState = getBehaviorById(
+                    draftState,
+                    simulatedRegionId,
+                    behaviorId,
+                    'commandBehavior'
+                );
+
+                delete behaviorState.stagingAreas[stagingAreaId];
+                return draftState;
+            },
+            rights: 'trainer',
+        };
 }

@@ -65,6 +65,7 @@ export const behaviorTypeToGermanNameDictionary: {
     transferBehavior: 'Fahrzeuge versenden',
     transferToHospitalBehavior: 'Patienten abtransportieren',
     managePatientTransportToHospitalBehavior: 'Transportorganisation',
+    commandBehavior: 'Einsatzleitung',
 };
 
 export const reportableInformationTypeToGermanNameDictionary: {
