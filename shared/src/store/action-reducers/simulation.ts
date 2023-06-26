@@ -9,24 +9,6 @@ import {
     ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import type {
-    ExerciseSimulationEvent,
-    TreatPatientsBehaviorState,
-    UnloadArrivingVehiclesBehaviorState,
-} from '../../simulation';
-import {
-    reportableInformationTypeToGermanNameDictionary,
-    behaviorTypeToGermanNameDictionary,
-    updateRequestPatientCountsDelay,
-    updateRequestVehiclesDelay,
-    TransferPatientsInSpecificVehicleRequestEvent,
-    TransferSpecificVehicleRequestEvent,
-    updateBehaviorsRequestTarget,
-    updateBehaviorsRequestInterval,
-    ReportableInformation,
-    reportableInformationAllowedValues,
-    RecurringEventActivityState,
-} from '../../simulation';
 import { StartCollectingInformationEvent } from '../../simulation/events/start-collecting';
 import { sendSimulationEvent } from '../../simulation/events/utils';
 import { nextUUID } from '../../simulation/utils/randomness';
@@ -43,24 +25,50 @@ import { IsLiteralUnion, IsUUIDSet, IsValue } from '../../utils/validators';
 import type { Action, ActionReducer } from '../action-reducer';
 import { ExpectedReducerError, ReducerError } from '../reducer-error';
 import {
-    PatientStatus,
-    requestTargetTypeOptions,
-    ExerciseRequestTargetConfiguration,
-    patientStatusForTransportAllowedValues,
-    PatientStatusForTransport,
-    patientStatusAllowedValues,
-    statusNames,
-    createSimulatedRegionTag,
-    createPatientStatusTag,
-    createVehicleTypeTag,
-    isInSimulatedRegion,
-    currentSimulatedRegionIdOf,
-    createTransferPointTag,
-} from '../../models';
-import {
     TransferDestination,
     transferDestinationTypeAllowedValues,
 } from '../../simulation/utils/transfer-destination';
+import {
+    ReportableInformation,
+    behaviorTypeToGermanNameDictionary,
+    reportableInformationAllowedValues,
+    reportableInformationTypeToGermanNameDictionary,
+} from '../../simulation/behaviors/utils';
+import {
+    ExerciseRequestTargetConfiguration,
+    requestTargetTypeOptions,
+} from '../../models/utils/request-target/exercise-request-target';
+import {
+    PatientStatus,
+    PatientStatusForTransport,
+    patientStatusAllowedValues,
+    patientStatusForTransportAllowedValues,
+    statusNames,
+} from '../../models/utils/patient-status';
+import type { TreatPatientsBehaviorState } from '../../simulation/behaviors/treat-patients';
+import type { UnloadArrivingVehiclesBehaviorState } from '../../simulation/behaviors/unload-arrived-vehicles';
+import { RecurringEventActivityState } from '../../simulation/activities/recurring-event';
+import {
+    createPatientStatusTag,
+    createSimulatedRegionTag,
+    createTransferPointTag,
+    createVehicleTypeTag,
+} from '../../models/utils/tag-helpers';
+import {
+    updateBehaviorsRequestInterval,
+    updateBehaviorsRequestTarget,
+} from '../../simulation/behaviors/request';
+import {
+    currentSimulatedRegionIdOf,
+    isInSimulatedRegion,
+} from '../../models/utils/position/position-helpers';
+import type { ExerciseSimulationEvent } from '../../simulation/events/exercise-simulation-event';
+import { TransferSpecificVehicleRequestEvent } from '../../simulation/events/transfer-specific-vehicle-request';
+import { TransferPatientsInSpecificVehicleRequestEvent } from '../../simulation/events/transfer-patients-in-specific-vehicle-request';
+import {
+    updateRequestPatientCountsDelay,
+    updateRequestVehiclesDelay,
+} from '../../simulation/behaviors/manage-patient-transport-to-hospital';
 import { getActivityById, getBehaviorById, getElement } from './utils';
 import { logBehavior } from './utils/log';
 

@@ -6,12 +6,7 @@ import {
     MaxLength,
     Min,
 } from 'class-validator';
-import type { AlarmGroupVehicle, VehicleTemplate } from '../../models';
-import {
-    AlarmGroupStartPoint,
-    EocLogEntry,
-    MapCoordinates,
-} from '../../models';
+
 import type { Mutable } from '../../utils';
 import {
     StrictObject,
@@ -22,8 +17,13 @@ import {
 import { IsValue } from '../../utils/validators';
 import type { Action, ActionReducer } from '../action-reducer';
 import type { ExerciseState } from '../../state';
-import { createVehicleParameters } from '../../state-helpers';
 import { nextUUID } from '../../simulation/utils/randomness';
+import { AlarmGroupStartPoint } from '../../models/utils/start-points';
+import { MapCoordinates } from '../../models/utils/position/map-coordinates';
+import { createVehicleParameters } from '../../state-helpers/create-vehicle-parameters';
+import type { VehicleTemplate } from '../../models/vehicle-template';
+import type { AlarmGroupVehicle } from '../../models/utils/alarm-group-vehicle';
+import { EocLogEntry } from '../../models/eoc-log-entry';
 import { getElement } from './utils';
 import { VehicleActionReducers } from './vehicle';
 import { TransferActionReducers } from './transfer';

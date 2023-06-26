@@ -66,6 +66,7 @@ export const behaviorTypeToGermanNameDictionary: {
     transferToHospitalBehavior: 'Patienten abtransportieren',
     managePatientTransportToHospitalBehavior: 'Transportorganisation',
     commandBehavior: 'Einsatzleitung',
+    interfaceSignallerBehavior: 'Interface Funker',
 };
 
 export const reportableInformationTypeToGermanNameDictionary: {

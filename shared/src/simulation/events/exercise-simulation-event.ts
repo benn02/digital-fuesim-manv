@@ -33,6 +33,16 @@ import { PatientCategoryTransferToHospitalFinishedEvent } from './patient-catego
 import { TryToSendToHospitalEvent } from './try-to-send-to-hospital';
 import { AskForPatientDataEvent } from './ask-for-patient-data-event';
 import { PatientsCountedEvent } from './patients-counted';
+import { PatientDataRequestedCommandEvent } from './patient-data-requested-command';
+import { PatientDataReceivedEvent } from './patient-data-received';
+import { VehicleDataRequestedCommandEvent } from './vehicle-data-requested-command';
+import { VehicleDataReceivedEvent } from './vehicle-data-received';
+import { TreatmentProgressDataReceivedEvent } from './treatment-progress-data-received';
+import { SendAlarmGroupCommandEvent } from './send-alarm-group-command';
+import { TransferConnectionMissingDataReceivedEvent } from './transfer-connection-missing-data-received';
+import { ResourceRequestDataReceivedEvent } from './resource-request-data-received';
+import { StartTransferToHospitalCommandEvent } from './start-transfer-to-hospital-command';
+import { TransferVehiclesCommandEvent } from './transfer-vehicle-command';
 
 export const simulationEvents = {
     MaterialAvailableEvent,
@@ -67,6 +77,16 @@ export const simulationEvents = {
     TryToSendToHospitalEvent,
     AskForPatientDataEvent,
     PatientsCountedEvent,
+    PatientDataReceivedEvent,
+    PatientDataRequestedCommandEvent,
+    VehicleDataRequestedCommandEvent,
+    VehicleDataReceivedEvent,
+    TreatmentProgressDataReceivedEvent,
+    SendAlarmGroupCommandEvent,
+    TransferConnectionMissingDataReceivedEvent,
+    ResourceRequestDataReceivedEvent,
+    StartTransferToHospitalCommandEvent,
+    TransferVehiclesCommandEvent,
 };
 
 export type ExerciseSimulationEvent = InstanceType<
@@ -114,6 +134,17 @@ export const simulationEventDictionary: ExerciseSimulationEventDictionary = {
     tryToSendToHospitalEvent: TryToSendToHospitalEvent,
     askForPatientDataEvent: AskForPatientDataEvent,
     patientsCountedEvent: PatientsCountedEvent,
+    patientDataReceivedEvent: PatientDataReceivedEvent,
+    patientDataRequestedCommandEvent: PatientDataRequestedCommandEvent,
+    vehicleDataRequestedCommandEvent: VehicleDataRequestedCommandEvent,
+    vehicleDataReceivedEvent: VehicleDataReceivedEvent,
+    treatmentProgressDataReceivedEvent: TreatmentProgressDataReceivedEvent,
+    sendAlarmGroupCommandEvent: SendAlarmGroupCommandEvent,
+    transferConnectionMissingDataReceivedEvent:
+        TransferConnectionMissingDataReceivedEvent,
+    resourceRequestDataReceivedEvent: ResourceRequestDataReceivedEvent,
+    startTransferToHospitalCommandEvent: StartTransferToHospitalCommandEvent,
+    transferVehiclesCommandEvent: TransferVehiclesCommandEvent,
 };
 
 export const simulationEventTypeOptions: Parameters<typeof Type> = [

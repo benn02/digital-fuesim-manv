@@ -21,6 +21,7 @@ import {
     RequestBehaviorState,
     TreatPatientsBehaviorState,
     UnloadArrivingVehiclesBehaviorState,
+    InterfaceSignallerBehaviorState,
 } from 'digital-fuesim-manv-shared';
 
 export interface SimulatedRegionDragTemplate {
@@ -95,7 +96,10 @@ const stereotypes: SimulatedRegion[] = [
         name: 'Einsatzleitung',
         borderColor: '#ff0088',
         activities: {},
-        behaviors: [CommandBehaviorState.create()],
+        behaviors: [
+            CommandBehaviorState.create(),
+            InterfaceSignallerBehaviorState.create(),
+        ],
         inEvents: [],
         position,
         size,

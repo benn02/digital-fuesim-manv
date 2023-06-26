@@ -1,5 +1,3 @@
-import type { Vehicle, VehicleTemplate } from '../models';
-import { Material, Personnel } from '../models';
 import type { MaterialTemplate } from '../models/material-template';
 import type { PersonnelTemplate } from '../models/personnel-template';
 import type { PersonnelType, MapCoordinates } from '../models/utils';
@@ -10,6 +8,10 @@ import { VehiclePosition } from '../models/utils/position/vehicle-position';
 import { arrayToUUIDSet } from '../utils/array-to-uuid-set';
 import { NoOccupation } from '../models/utils/occupations/no-occupation';
 import type { UUID } from '../utils';
+import type { VehicleTemplate } from '../models/vehicle-template';
+import { Material } from '../models/material';
+import { Personnel } from '../models/personnel';
+import type { Vehicle } from '../models/vehicle';
 
 /**
  * @returns a vehicle with personnel and materials to be added to the map

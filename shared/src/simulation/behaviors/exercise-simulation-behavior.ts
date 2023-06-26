@@ -12,6 +12,7 @@ import { transferBehavior } from './transfer';
 import { transferToHospitalBehavior } from './transfer-to-hospital';
 import { managePatientTransportToHospitalBehavior } from './manage-patient-transport-to-hospital';
 import { commandBehavior } from './command';
+import { interfaceSignallerBehavior } from './interface-signaller';
 
 export const simulationBehaviors = {
     automaticallyDistributeVehiclesBehavior,
@@ -26,6 +27,7 @@ export const simulationBehaviors = {
     transferToHospitalBehavior,
     managePatientTransportToHospitalBehavior,
     commandBehavior,
+    interfaceSignallerBehavior,
 };
 
 export type ExerciseSimulationBehavior =
