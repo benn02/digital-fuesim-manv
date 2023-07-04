@@ -122,4 +122,11 @@ export class SimulatedRegionOverviewBehaviorCommandComponent
             stagingAreaId,
         });
     }
+
+    public debug() {
+        this.exerciseService.proposeAction({
+            type: '[Debug] Debug',
+            simulatedRegionId: this.simulatedRegionId,
+        });
+    }
 }

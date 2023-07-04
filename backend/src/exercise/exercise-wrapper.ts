@@ -245,10 +245,11 @@ export class ExerciseWrapper extends NormalType<
     };
 
     // Call the tick every 1000 ms
-    private readonly tickInterval = 1000;
+    private unused() {}
+    private readonly tickInterval = 10000;
     private readonly tickHandler = new PeriodicEventHandler(
         this.tick,
-        this.tickInterval
+        this.tickInterval / 1000 // TODO: Remove
     );
 
     private readonly clients = new Set<ClientWrapper>();

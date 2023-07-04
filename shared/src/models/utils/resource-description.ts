@@ -2,10 +2,14 @@ import { StrictObject } from '../../utils';
 
 export const addResourceDescription = createCombine((a, b) => a + b);
 export const subtractResourceDescription = createCombine((a, b) => a - b);
+export const maxBetweenResourceDescriptions = createCombine((a, b) =>
+    Math.max(a, b)
+);
 export const greaterEqualResourceDescription = createCompare((a, b) => a >= b);
 export const scaleResourceDescription = createMap((a, s) => a * s);
 export const ceilResourceDescription = createMap(Math.ceil);
 export const maxResourceDescription = createMap(Math.max);
+export const minResourceDescription = createMap(Math.min);
 
 export type ResourceDescription<K extends string = string> = {
     [key in K]: number;

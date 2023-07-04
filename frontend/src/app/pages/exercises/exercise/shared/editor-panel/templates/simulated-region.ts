@@ -70,6 +70,7 @@ const stereotypes: SimulatedRegion[] = [
             TransferBehaviorState.create(),
             AnswerRequestsBehaviorState.create(),
             AutomaticallyDistributeVehiclesBehaviorState.create(),
+            UnloadArrivingVehiclesBehaviorState.create(0, {}, 1),
         ],
         inEvents: [],
         position,

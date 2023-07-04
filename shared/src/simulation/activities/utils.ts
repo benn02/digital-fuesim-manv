@@ -9,6 +9,12 @@ export function addActivity(
     simulatedRegion: Mutable<SimulatedRegion>,
     activityState: ExerciseSimulationActivityState
 ) {
+    /* console.log(
+        `[ACTIVITY] Start: ${simulatedRegion.name}: ${JSON.stringify(
+            activityState
+        )}`
+    );*/
+    const kommentarLöschen = 0;
     simulatedRegion.activities[activityState.id] =
         cloneDeepMutable(activityState);
 }
@@ -19,6 +25,7 @@ export function terminateActivity(
     activityId: UUID
 ) {
     const activityType = simulatedRegion.activities[activityId]?.type;
+    // console.log(`[ACTIVITY] End: ${simulatedRegion.name}: ${activityType}`);
     if (activityType) {
         const activity = simulationActivityDictionary[activityType];
         if (activity.onTerminate) {

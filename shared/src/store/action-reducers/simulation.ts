@@ -69,6 +69,7 @@ import {
     updateRequestPatientCountsDelay,
     updateRequestVehiclesDelay,
 } from '../../simulation/behaviors/manage-patient-transport-to-hospital';
+import { DebugEvent } from '../../simulation/events/debug';
 import { getActivityById, getBehaviorById, getElement } from './utils';
 import { logBehavior } from './utils/log';
 
@@ -694,7 +695,29 @@ export class RemoveStagingAreaFromCommandAction implements Action {
     public readonly stagingAreaId!: UUID;
 }
 
+export class DebugAction implements Action {
+    @IsValue('[Debug] Debug')
+    public readonly type = '[Debug] Debug';
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly simulatedRegionId!: UUID;
+}
+
 export namespace SimulationActionReducers {
+    export const debug: ActionReducer<DebugAction> = {
+        action: DebugAction,
+        reducer(draftState, { simulatedRegionId }) {
+            const simulatedRegion = getElement(
+                draftState,
+                'simulatedRegion',
+                simulatedRegionId
+            );
+            sendSimulationEvent(simulatedRegion, DebugEvent.create());
+            return draftState;
+        },
+        rights: 'trainer',
+    };
+
     export const updateTreatPatientsIntervals: ActionReducer<UpdateTreatPatientsIntervalsAction> =
         {
             action: UpdateTreatPatientsIntervalsAction,

@@ -609,7 +609,8 @@ function findAssignablePersonnel(
     minType: PersonnelType,
     patientStatus: TreatablePatientStatus,
     maxPatients: number,
-    mixWithHigherStatus = true
+    mixWithHigherStatus = true,
+    prioritizeOneOnOneTreatment = true
 ): { personnel: CateringPersonnel; isExclusive: boolean } | undefined {
     const exclusivePersonnel = groupedPersonnel[minType]?.find((personnel) =>
         hasNoTreatments(personnel)
@@ -617,6 +618,25 @@ function findAssignablePersonnel(
 
     if (exclusivePersonnel) {
         return { personnel: exclusivePersonnel, isExclusive: true };
+    }
+
+    const nextType =
+        personnelTypePriorityList[
+            personnelTypePriorityList.indexOf(minType) + 1
+        ];
+
+    const higherPersonnel = nextType
+        ? findAssignablePersonnel(
+              groupedPersonnel,
+              nextType,
+              patientStatus,
+              maxPatients,
+              mixWithHigherStatus
+          )
+        : undefined;
+
+    if (prioritizeOneOnOneTreatment && higherPersonnel?.isExclusive) {
+        return higherPersonnel;
     }
 
     const availablePersonnel = groupedPersonnel[minType]?.find(
@@ -635,20 +655,7 @@ function findAssignablePersonnel(
         return { personnel: availablePersonnel, isExclusive: false };
     }
 
-    const nextType =
-        personnelTypePriorityList[
-            personnelTypePriorityList.indexOf(minType) + 1
-        ];
-    if (nextType === undefined) {
-        return undefined;
-    }
-    return findAssignablePersonnel(
-        groupedPersonnel,
-        nextType,
-        patientStatus,
-        maxPatients,
-        mixWithHigherStatus
-    );
+    return higherPersonnel;
 }
 
 /**
@@ -693,6 +700,9 @@ function assignTreatments(
 
     groupedPatients.red?.forEach((patient) => {
         tryAssignPersonnel(patient, 'red', 'notSan', treatmentContext);
+    });
+
+    groupedPatients.red?.forEach((patient) => {
         tryAssignPersonnel(patient, 'red', 'rettSan', treatmentContext);
     });
 
@@ -701,7 +711,15 @@ function assignTreatments(
     });
 
     groupedPatients.green?.forEach((patient) => {
-        tryAssignPersonnel(patient, 'green', 'san', treatmentContext, false);
+        tryAssignPersonnel(
+            patient,
+            'green',
+            'san',
+            treatmentContext,
+            false,
+            2,
+            false
+        );
     });
 
     const cateringMaterials = createCateringMaterials(materials);
@@ -783,7 +801,8 @@ function tryAssignPersonnel(
         draftState: Mutable<ExerciseState>;
     },
     mixWithHigherStatus = true,
-    maxPatients: number = 2
+    maxPatients: number = 2,
+    prioritizeOneOnOneTreatment = true
 ) {
     const { groupedPersonnel, draftState } = context;
     const assignablePersonnel = findAssignablePersonnel(
@@ -791,7 +810,8 @@ function tryAssignPersonnel(
         minType,
         patientStatus,
         maxPatients,
-        mixWithHigherStatus
+        mixWithHigherStatus,
+        prioritizeOneOnOneTreatment
     );
 
     if (assignablePersonnel) {

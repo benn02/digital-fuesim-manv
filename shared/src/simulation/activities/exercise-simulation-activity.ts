@@ -14,6 +14,7 @@ import { publishRadiogramActivity } from './publish-radiogram';
 import { transferPatientToHospitalActivity } from './transfer-patient-to-hospital';
 import { countPatientsActivity } from './count-patients';
 import { gatherRadiogramInformationActivity } from './gather-radiogram-inforamtion';
+import { issueCommandActivity } from './issue-command';
 
 export const simulationActivities = {
     reassignTreatmentsActivity,
@@ -30,6 +31,7 @@ export const simulationActivities = {
     transferPatientToHospitalActivity,
     countPatientsActivity,
     gatherRadiogramInformationActivity,
+    issueCommandActivity,
 };
 
 export type ExerciseSimulationActivity =

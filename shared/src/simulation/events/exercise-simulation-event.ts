@@ -43,6 +43,7 @@ import { TransferConnectionMissingDataReceivedEvent } from './transfer-connectio
 import { ResourceRequestDataReceivedEvent } from './resource-request-data-received';
 import { StartTransferToHospitalCommandEvent } from './start-transfer-to-hospital-command';
 import { TransferVehiclesCommandEvent } from './transfer-vehicle-command';
+import { DebugEvent } from './debug';
 
 export const simulationEvents = {
     MaterialAvailableEvent,
@@ -87,6 +88,7 @@ export const simulationEvents = {
     ResourceRequestDataReceivedEvent,
     StartTransferToHospitalCommandEvent,
     TransferVehiclesCommandEvent,
+    DebugEvent,
 };
 
 export type ExerciseSimulationEvent = InstanceType<
@@ -145,6 +147,7 @@ export const simulationEventDictionary: ExerciseSimulationEventDictionary = {
     resourceRequestDataReceivedEvent: ResourceRequestDataReceivedEvent,
     startTransferToHospitalCommandEvent: StartTransferToHospitalCommandEvent,
     transferVehiclesCommandEvent: TransferVehiclesCommandEvent,
+    debugEvent: DebugEvent,
 };
 
 export const simulationEventTypeOptions: Parameters<typeof Type> = [

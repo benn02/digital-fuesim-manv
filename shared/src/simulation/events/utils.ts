@@ -8,4 +8,9 @@ export function sendSimulationEvent(
     event: ExerciseSimulationEvent
 ) {
     simulatedRegion.inEvents.push(cloneDeepMutable(event));
+    if (event.type !== 'tickEvent') {
+        console.log(
+            `[EVENT] ${simulatedRegion.name}: ${JSON.stringify(event)}`
+        );
+    }
 }

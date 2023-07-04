@@ -27,3 +27,4 @@ export * from './rescue-resource';
 export * from './request-target';
 export * from './occupations';
 export * from './tag-helpers';
+export * from './position';

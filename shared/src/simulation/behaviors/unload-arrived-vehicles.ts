@@ -1,4 +1,4 @@
-import { IsInt, IsUUID, Min } from 'class-validator';
+import { IsInt, IsNumber, IsUUID, Min } from 'class-validator';
 import { getCreate } from '../../models/utils/get-create';
 import {
     changeOccupation,
@@ -36,15 +36,23 @@ export class UnloadArrivingVehiclesBehaviorState
     @IsUUIDSquaredMap()
     readonly vehicleActivityMap: UUIDSquaredMap;
 
+    @IsInt()
+    readonly unloadedVehicles: number = 0;
+
+    @IsNumber()
+    readonly maximumVehiclesToUnload: number;
+
     /**
      * @deprecated Use {@link create} instead
      */
     constructor(
         unloadDelay: number = 2 * 60 * 1000,
-        vehicleActivityMap: UUIDSquaredMap = {}
+        vehicleActivityMap: UUIDSquaredMap = {},
+        maximumVehiclesToUnload: number = Number.MAX_VALUE
     ) {
         this.unloadDelay = unloadDelay;
         this.vehicleActivityMap = vehicleActivityMap;
+        this.maximumVehiclesToUnload = maximumVehiclesToUnload;
     }
 
     static readonly create = getCreate(this);
@@ -66,6 +74,12 @@ export const unloadArrivingVehiclesBehavior: SimulationBehavior<UnloadArrivingVe
                     break;
                 }
                 case 'vehicleArrivedEvent': {
+                    if (
+                        behaviorState.unloadedVehicles >=
+                        behaviorState.maximumVehiclesToUnload
+                    ) {
+                        return;
+                    }
                     const vehicle = tryGetElement(
                         draftState,
                         'vehicle',
@@ -89,6 +103,7 @@ export const unloadArrivingVehiclesBehavior: SimulationBehavior<UnloadArrivingVe
                                 behaviorState.unloadDelay
                             )
                         );
+                        behaviorState.unloadedVehicles++;
                     }
                     break;
                 }

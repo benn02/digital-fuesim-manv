@@ -30,6 +30,7 @@ export class VehicleOccupationEditorComponent implements OnChanges {
         waitForTransferOccupation: 'Das Fahrzeug wartet auf den Transfer',
         patientTransferOccupation:
             'Das Fahrzeug ist für den Transport von Patienten ins Krankenhaus reserviert',
+        leadOccupation: 'Das Fahrzeug übernimmt die Führung des Bereichs',
     };
 
     constructor(

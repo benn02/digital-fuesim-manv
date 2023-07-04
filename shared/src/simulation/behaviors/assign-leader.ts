@@ -18,6 +18,9 @@ import { isInSpecificSimulatedRegion } from '../../models/utils/position/positio
 import type { SimulatedRegion } from '../../models/simulated-region';
 import { addActivity } from '../activities/utils';
 import { DelayEventActivityState } from '../activities/delay-event';
+import { LeadOccupation } from '../../models/utils/occupations/lead-occupation';
+import { changeOccupation } from '../../models/utils/occupations/occupation-helpers-mutable';
+import { NoOccupation } from '../../models/utils/occupations/no-occupation';
 import type {
     SimulationBehavior,
     SimulationBehaviorState,
@@ -276,6 +279,28 @@ function changeLeader(
     behaviorState: Mutable<AssignLeaderBehaviorState>,
     newLeaderId: UUID | undefined
 ) {
+    if (behaviorState.leaderId) {
+        // remove old leader occupation
+        const oldLeader = getElement(
+            draftState,
+            'personnel',
+            behaviorState.leaderId
+        );
+        changeOccupation(
+            draftState,
+            getElement(draftState, 'vehicle', oldLeader.vehicleId),
+            NoOccupation.create()
+        );
+    }
+    if (newLeaderId) {
+        // add new leader occupation
+        const newLeader = getElement(draftState, 'personnel', newLeaderId);
+        changeOccupation(
+            draftState,
+            getElement(draftState, 'vehicle', newLeader.vehicleId),
+            LeadOccupation.create()
+        );
+    }
     addActivity(
         simulatedRegion,
         DelayEventActivityState.create(
