@@ -201,7 +201,7 @@ export class ExerciseWrapper extends NormalType<
     /**
      * How many ticks have to pass until treatments get recalculated (e.g. with {@link tickInterval} === 1000 and {@link refreshTreatmentInterval} === 60 every minute)
      */
-    private readonly refreshTreatmentInterval = 20;
+    private readonly refreshTreatmentInterval = 20000000; //TODO: Undo
     /**
      * This function gets called once every second in case the exercise is running.
      * All periodic actions of the exercise (e.g. status changes for patients) should happen here.
@@ -245,11 +245,15 @@ export class ExerciseWrapper extends NormalType<
     };
 
     // Call the tick every 1000 ms
-    private unused() {}
-    private readonly tickInterval = 10000;
+    private unused() {
+        const unused = 0;
+        if (0 == 0) {
+        }
+    }
+    private readonly tickInterval = 1000;
     private readonly tickHandler = new PeriodicEventHandler(
         this.tick,
-        this.tickInterval / 1000 // TODO: Remove
+        0 //this.tickInterval / 1000 // TODO: Remove
     );
 
     private readonly clients = new Set<ClientWrapper>();

@@ -5,6 +5,9 @@ export const subtractResourceDescription = createCombine((a, b) => a - b);
 export const maxBetweenResourceDescriptions = createCombine((a, b) =>
     Math.max(a, b)
 );
+export const minBetweenResourceDescriptions = createCombine((a, b) =>
+    Math.min(a, b)
+);
 export const greaterEqualResourceDescription = createCompare((a, b) => a >= b);
 export const scaleResourceDescription = createMap((a, s) => a * s);
 export const ceilResourceDescription = createMap(Math.ceil);

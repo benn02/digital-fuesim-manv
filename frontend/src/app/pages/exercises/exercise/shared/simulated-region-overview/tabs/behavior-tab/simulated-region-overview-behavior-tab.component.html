@@ -86,6 +86,11 @@
                     [simulatedRegionId]="simulatedRegion.id"
                     [commandBehaviorId]="selectedBehavior!.id"
                 />
+                <app-simulated-region-overview-behavior-interface-signaller
+                    *ngSwitchCase="'interfaceSignallerBehavior'"
+                    [simulatedRegionId]="simulatedRegion.id"
+                    [behaviorId]="selectedBehavior!.id"
+                />
                 <p *ngSwitchDefault class="text-muted font-bold">
                     Es ist noch keine Verhaltensweise ausgewählt.
                 </p>

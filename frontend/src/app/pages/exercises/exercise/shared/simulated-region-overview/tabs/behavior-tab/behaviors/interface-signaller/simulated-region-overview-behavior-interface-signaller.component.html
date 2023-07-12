@@ -1,0 +1,74 @@
+<ng-container *ngIf="knownAlarmGroups$ | async as knownAlarmGroups">
+    <table class="table" *ngIf="knownAlarmGroups.length > 0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Alarmierungsgrenze</th>
+                <th>Entfernen</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let knownAlarmGroup of knownAlarmGroups">
+                <th scope="row" class="w-75">{{ knownAlarmGroup[0].name }}</th>
+                <td>
+                    <div class="input-group input-group-sm">
+                        <input
+                            #patientInput="ngModel"
+                            [ngModel]="knownAlarmGroup[1]"
+                            (appSaveOnTyping)="
+                                changeAlarmGroup(knownAlarmGroup[0].id, $event)
+                            "
+                            min="0"
+                            required
+                            step="10"
+                            type="number"
+                            class="form-control form-control-sm d-inline-block no-validation"
+                            placeholder="Patienten"
+                        />
+                        <span class="input-group-text">Patienten</span>
+                    </div>
+                </td>
+
+                <td>
+                    <button
+                        class="btn btn-outline-danger"
+                        type="button"
+                        (click)="removeAlarmGroup(knownAlarmGroup[0].id)"
+                    >
+                        <span class="bi-trash"></span>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</ng-container>
+
+<div
+    *ngIf="possibleNewAlarmGroups$ | async as possibleNewAlarmGroups"
+    ngbDropdown
+    placement="bottom-start"
+    autoClose="outside"
+    class="d-inline-block overflow-visible text-center mb-3"
+>
+    <button
+        ngbDropdownToggle
+        type="button"
+        class="btn btn-outline-primary"
+        [disabled]="possibleNewAlarmGroups.length === 0"
+    >
+        <span class="bi-plus me-1"></span>
+        Weitere Alarmierungsgruppe hinzufügen
+    </button>
+    <div *ngIf="possibleNewAlarmGroups.length > 0" ngbDropdownMenu>
+        <button
+            *ngFor="let possibleNewAlarmGroup of possibleNewAlarmGroups"
+            ngbDropdownItem
+            class="dropdown-item"
+            type="button"
+            (click)="addAlarmGroup(possibleNewAlarmGroup.id)"
+        >
+            <span class="bi-plus me-1"></span>
+            {{ possibleNewAlarmGroup.name }}
+        </button>
+    </div>
+</div>

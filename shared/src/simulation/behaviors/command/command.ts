@@ -1,224 +1,66 @@
-import { IsUUID, ValidateIf } from 'class-validator';
+import { IsInt, IsUUID, ValidateIf } from 'class-validator';
 import cloneDeep from 'lodash-es/cloneDeep';
-import { getCreate } from '../../models/utils/get-create';
-import type { Mutable } from '../../utils';
+import { getCreate } from '../../../models/utils/get-create';
+import type { Mutable } from '../../../utils';
 import {
     StrictObject,
     UUID,
     UUIDSet,
-    cloneDeepMutable,
     uuid,
     uuidValidationOptions,
-} from '../../utils';
-import { IsUUIDSet, IsValue } from '../../utils/validators';
+} from '../../../utils';
+import { IsUUIDSet, IsValue } from '../../../utils/validators';
 
 import {
     type ResourceDescription,
     addPartialResourceDescriptions,
     subtractPartialResourceDescriptions,
     addResourceDescription,
-    scaleResourceDescription,
-    ceilResourceDescription,
     subtractResourceDescription,
     minResourceDescription,
-} from '../../models/utils/resource-description';
-import { IsPatientsPerUUID } from '../../utils/validators/is-patients-per-uuid';
-import type { PatientStatus } from '../../models/utils/patient-status';
-import type { PatientDataReceivedEvent } from '../events/patient-data-received';
-import { TransferVehiclesCommandEvent } from '../events/transfer-vehicle-command';
-import type { SimulatedRegion } from '../../models/simulated-region';
-import type { ExerciseState } from '../../state';
-import { isInSpecificSimulatedRegion } from '../../models/utils/position/position-helpers';
-import type { TransferPoint } from '../../models/transfer-point';
-import type { ExerciseSimulationEvent } from '../events';
-import { addActivity } from '../activities/utils';
-import { IssueCommandActivityState } from '../activities/issue-command';
-import { nextUUID } from '../utils/randomness';
-import { PatientDataRequestedCommandEvent } from '../events/patient-data-requested-command';
-import { VehicleDataRequestedCommandEvent } from '../events/vehicle-data-requested-command';
-import type { VehicleDataReceivedEvent } from '../events/vehicle-data-received';
-import { IsResourceDescription } from '../../utils/validators/is-resource-description';
-import type { PersonnelType } from '../../models/utils/personnel-type';
-import { logBehavior } from '../../store/action-reducers/utils/log';
-import { PatientTransferOccupation } from '../../models/utils/occupations/patient-transfer-occupation';
+    maxBetweenResourceDescriptions,
+    minBetweenResourceDescriptions,
+} from '../../../models/utils/resource-description';
+import { IsPatientsPerUUID } from '../../../utils/validators/is-patients-per-uuid';
+import type { PatientStatus } from '../../../models/utils/patient-status';
+import type { PatientDataReceivedEvent } from '../../events/patient-data-received';
+import type { SimulatedRegion } from '../../../models/simulated-region';
+import type { ExerciseState } from '../../../state';
+import { PatientDataRequestedCommandEvent } from '../../events/patient-data-requested-command';
+import { VehicleDataRequestedCommandEvent } from '../../events/vehicle-data-requested-command';
+import type { VehicleDataReceivedEvent } from '../../events/vehicle-data-received';
+import { IsResourceDescription } from '../../../utils/validators/is-resource-description';
+import type { PersonnelType } from '../../../models/utils/personnel-type';
+import { logBehavior } from '../../../store/action-reducers/utils/log';
+import { SendAlarmGroupCommandEvent } from '../../events/send-alarm-group-command';
 import type {
     SimulationBehavior,
     SimulationBehaviorState,
-} from './simulation-behavior';
-import { getElement } from '../../store/action-reducers/utils';
-
-const COLLECT_PATIENT_DATA_INTERVAL = 5 * 60 * 1000;
-const COLLECT_VEHICLE_DATA_INTERVAL = 5 * 60 * 1000;
-const COLLECT_VEHICLE_DATA_INTERVAL_PT = 5 * 60 * 1000;
-
-type stage =
-    | 'contactInitiation'
-    | 'countingPatients'
-    | 'securingPatients'
-    | 'transportingPatients';
-
-interface PatientsPerRegion {
-    [simulatedRegionId: UUID]: ResourceDescription<PatientStatus>;
-}
-
-interface VehiclesPerRegion {
-    [simulatedRegionId: UUID]: ResourceDescription;
-}
-
-const emptyPatientResourceDescription = {
-    red: 0,
-    green: 0,
-    black: 0,
-    blue: 0,
-    white: 0,
-    yellow: 0,
-};
-
-const assumedPatientPersonnelNeeds: {
-    [patientStatus in PatientStatus]: ResourceDescription<PersonnelType>;
-} = {
-    black: {
-        gf: 0,
-        notarzt: 0,
-        notSan: 0,
-        rettSan: 0,
-        san: 0,
-    },
-    blue: {
-        gf: 0,
-        notarzt: 0,
-        notSan: 0,
-        rettSan: 0,
-        san: 1,
-    },
-    green: {
-        gf: 0,
-        notarzt: 0,
-        notSan: 0,
-        rettSan: 0,
-        san: 0.5,
-    },
-    red: {
-        gf: 0,
-        notarzt: 0.5,
-        notSan: 1,
-        rettSan: 1,
-        san: 0,
-    },
-    white: {
-        gf: 0,
-        notarzt: 0,
-        notSan: 0,
-        rettSan: 0,
-        san: 0,
-    },
-    yellow: {
-        gf: 0,
-        notarzt: 0.25,
-        notSan: 0,
-        rettSan: 1,
-        san: 0,
-    },
-};
-
-const personnelInVehicles: {
-    [vehicleType: string]: ResourceDescription<PersonnelType>;
-} = {
-    RTW: {
-        gf: 0,
-        notarzt: 0,
-        notSan: 1,
-        rettSan: 1,
-        san: 0,
-    },
-    KTW: {
-        gf: 0,
-        notarzt: 0,
-        notSan: 0,
-        rettSan: 1,
-        san: 1,
-    },
-    'KTW (KatSchutz)': {
-        gf: 0,
-        notarzt: 0,
-        notSan: 0,
-        rettSan: 1,
-        san: 1,
-    },
-    NEF: {
-        gf: 0,
-        notarzt: 1,
-        notSan: 1,
-        rettSan: 0,
-        san: 0,
-    },
-    'GW-San': {
-        gf: 1,
-        notarzt: 1,
-        notSan: 0,
-        rettSan: 2,
-        san: 2,
-    },
-    RTH: {
-        gf: 0,
-        notarzt: 1,
-        notSan: 1,
-        rettSan: 0,
-        san: 0,
-    },
-};
-const transportablePatients: {
-    [vehicleType: string]: ResourceDescription<PatientStatus>;
-} = {
-    RTW: {
-        black: 0,
-        blue: 0,
-        green: 1,
-        red: 1,
-        white: 0,
-        yellow: 1,
-    },
-    KTW: {
-        black: 0,
-        blue: 0,
-        green: 1,
-        red: 0,
-        white: 0,
-        yellow: 1,
-    },
-    'KTW (KatSchutz)': {
-        black: 0,
-        blue: 0,
-        green: 2,
-        red: 0,
-        white: 0,
-        yellow: 1,
-    },
-    NEF: {
-        black: 0,
-        blue: 0,
-        green: 0,
-        red: 0,
-        white: 0,
-        yellow: 0,
-    },
-    'GW-San': {
-        black: 0,
-        blue: 0,
-        green: 0,
-        red: 0,
-        white: 0,
-        yellow: 0,
-    },
-    RTH: {
-        black: 0,
-        blue: 0,
-        green: 1,
-        red: 1,
-        white: 0,
-        yellow: 1,
-    },
-};
+} from '../simulation-behavior';
+import {
+    COLLECT_PATIENT_DATA_INTERVAL,
+    COLLECT_VEHICLE_DATA_INTERVAL,
+    COLLECT_VEHICLE_DATA_INTERVAL_PT,
+    PatientsPerRegion,
+    VehiclesPerRegion,
+    emptyPatientResourceDescription,
+    personnelInVehicles,
+} from './constants';
+import {
+    areVehiclesLeft,
+    displayAnyPerRegion,
+    getTransferPointOfSimulatedRegion,
+    issueCommand,
+    nameOfSimulatedRegion,
+    patientsAfterTransport,
+    personnelExpectedToGetToRegion,
+    personnelNeedsFromPatients,
+    sendVehiclesToRegion,
+    totalPatientsInRegion,
+    totalResources,
+    vehiclesToPersonnel,
+} from './helpers';
+import { calculateVehicleAllocationForHospitalTransport } from './allocations';
 
 export class CommandBehaviorState implements SimulationBehaviorState {
     @IsValue('commandBehavior' as const)
@@ -262,6 +104,9 @@ export class CommandBehaviorState implements SimulationBehaviorState {
 
     @IsResourceDescription()
     public readonly totalVehiclesInStagingAreas: ResourceDescription = {};
+
+    @IsInt()
+    public readonly alarmGroupPatients: number = 0;
 
     static readonly create = getCreate(this);
 }
@@ -331,7 +176,10 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                     logBehavior(
                         draftState,
                         [],
-                        `Es wurden Patientendaten erhallten`,
+                        `Es wurden Patientendaten von ${nameOfSimulatedRegion(
+                            event.simulatedRegion,
+                            draftState
+                        )} erhallten`,
                         simulatedRegion.id,
                         behaviorState.id
                     );
@@ -353,7 +201,10 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                     logBehavior(
                         draftState,
                         [],
-                        `Es wurden Fahrzeugdaten erhallten`,
+                        `Es wurden Fahrzeugdaten von ${nameOfSimulatedRegion(
+                            event.simulatedRegion,
+                            draftState
+                        )} erhallten`,
                         simulatedRegion.id,
                         behaviorState.id
                     );
@@ -379,6 +230,14 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                             event.simulatedRegionId
                         ];
                     }
+                    issueCommand(
+                        simulatedRegion,
+                        draftState,
+                        PatientDataRequestedCommandEvent.create(
+                            event.simulatedRegionId,
+                            true
+                        )
+                    );
                     if (event.newProgress === 'counted') {
                         issueCommand(
                             simulatedRegion,
@@ -389,14 +248,7 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                                 COLLECT_PATIENT_DATA_INTERVAL
                             )
                         );
-                        issueCommand(
-                            simulatedRegion,
-                            draftState,
-                            PatientDataRequestedCommandEvent.create(
-                                event.simulatedRegionId,
-                                true
-                            )
-                        );
+
                         issueCommand(
                             simulatedRegion,
                             draftState,
@@ -418,7 +270,10 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                     logBehavior(
                         draftState,
                         [],
-                        `Es wurde ein Behandlugsstatuswechsel erkannt`,
+                        `Es wurde ein Behandlugsstatuswechsel in ${nameOfSimulatedRegion(
+                            event.simulatedRegionId,
+                            draftState
+                        )} erkannt`,
                         simulatedRegion.id,
                         behaviorState.id
                     );
@@ -528,55 +383,6 @@ function handleVehicleDataReceived(
     ] = vehicleDataReceivedEvent.vehiclesInRegion;
 }
 
-function sendVehiclesToRegion(
-    simulatedRegionId: UUID,
-    vehicles: ResourceDescription,
-    simulatedRegion: Mutable<SimulatedRegion>,
-    commandBehaviorState: Mutable<CommandBehaviorState>,
-    draftState: Mutable<ExerciseState>,
-    isTransportToHospital: boolean = false
-) {
-    issueCommand(
-        simulatedRegion,
-        draftState,
-        TransferVehiclesCommandEvent.create(
-            Object.keys(commandBehaviorState.stagingAreas)[0]!,
-            vehicles,
-            getTransferPointOfSimulatedRegion(simulatedRegionId, draftState).id,
-            isTransportToHospital
-                ? PatientTransferOccupation.create(simulatedRegion.id)
-                : undefined
-        )
-    );
-
-    commandBehaviorState.vehiclesOnTheWayToRegions[simulatedRegionId] =
-        addPartialResourceDescriptions([
-            commandBehaviorState.vehiclesOnTheWayToRegions[simulatedRegionId] ??
-                {},
-            vehicles,
-        ]) as ResourceDescription;
-}
-
-function getTransferPointOfSimulatedRegion(
-    simulatedRegionId: UUID,
-    draftState: Mutable<ExerciseState>
-): TransferPoint {
-    return Object.values(draftState.transferPoints).find((transferPoint) =>
-        isInSpecificSimulatedRegion(transferPoint, simulatedRegionId)
-    )!;
-}
-
-function issueCommand(
-    simulatedRegion: Mutable<SimulatedRegion>,
-    draftState: Mutable<ExerciseState>,
-    event: ExerciseSimulationEvent
-) {
-    addActivity(
-        simulatedRegion,
-        IssueCommandActivityState.create(nextUUID(draftState), event)
-    );
-}
-
 function assignVehicleBudgets(
     commandBehaviorState: Mutable<CommandBehaviorState>,
     draftState: Mutable<ExerciseState>,
@@ -590,20 +396,61 @@ function assignVehicleBudgets(
     // Guess 7% sk I 19% sk II 74% SK III nach DRK Heftchen Seite 39 unten oder BMI 2013 Sefrin et al 2013
     // Guess that trays are equally sized
 
+    const numInformedRegions = Object.keys(
+        commandBehaviorState.patientTraysWithInformation
+    ).length;
+
+    const numPatientsInInformedRegions = Object.keys(
+        commandBehaviorState.patientTraysWithInformation
+    ).reduce(
+        (totalNumberOfPatients, patientTrayId) =>
+            totalNumberOfPatients +
+            totalPatientsInRegion(patientTrayId, commandBehaviorState),
+        0
+    );
+
+    const numRegions = Object.keys(commandBehaviorState.patientTrays).length;
+
+    const numUninformedRegions = numRegions - numInformedRegions;
+
     let averagePatientTraySize = Math.ceil(
-        Object.keys(commandBehaviorState.patientTraysWithInformation).reduce(
-            (totalNumberOfPatients, patientTrayId) =>
-                totalNumberOfPatients +
-                totalPatientsInRegion(patientTrayId, commandBehaviorState),
-            0
-        ) /
-            Object.keys(
-                commandBehaviorState.patientTraysWithInformation
-            ).reduce((numberOfPatientTrays, _) => numberOfPatientTrays + 1, 0)
+        numPatientsInInformedRegions / numInformedRegions
     );
 
     if (!averagePatientTraySize) {
-        averagePatientTraySize = 0;
+        averagePatientTraySize = 5; // TODO: Magic Number
+    }
+
+    const assumedNumPatients =
+        10 *
+        Math.ceil(
+            0.1 *
+                ((2 / 3) * numUninformedRegions * averagePatientTraySize +
+                    numPatientsInInformedRegions)
+        ); // TODO: Magic Number
+
+    if (assumedNumPatients > commandBehaviorState.alarmGroupPatients) {
+        commandBehaviorState.alarmGroupPatients = assumedNumPatients;
+        issueCommand(
+            simulatedRegion,
+            draftState,
+            SendAlarmGroupCommandEvent.create(
+                getTransferPointOfSimulatedRegion(
+                    Object.keys(commandBehaviorState.stagingAreas)[0]!,
+                    draftState
+                ).id,
+                assumedNumPatients
+            )
+        );
+        logBehavior(
+            draftState,
+            [],
+            `Es wurden Alarmgruppen für ${assumedNumPatients} Patienten bestellt basierend auf ${numPatientsInInformedRegions} bekannten und ${
+                numUninformedRegions * averagePatientTraySize
+            } vorhergesagten Patienten.`,
+            simulatedRegion.id,
+            commandBehaviorState.id
+        );
     }
 
     const assumedPatientsInRegion = Object.fromEntries(
@@ -613,8 +460,9 @@ function assignVehicleBudgets(
                 commandBehaviorState.patientTraysWithInformation[region] &&
                 commandBehaviorState.patientsExpectedInRegions[region]
             ) {
-                assumedPatients =
-                    commandBehaviorState.patientsExpectedInRegions[region]!;
+                assumedPatients = cloneDeep(
+                    commandBehaviorState.patientsExpectedInRegions[region]!
+                );
             } else {
                 assumedPatients = {
                     white: averagePatientTraySize,
@@ -684,6 +532,77 @@ function assignVehicleBudgets(
     const usableVehicles = new Set<string>();
     let needsLastIteration: { [x: string]: any } = {};
 
+    // TODO: Hübscher refactoren (vlt funktionen assign for treat/transport)
+
+    const assumedPatientsNotTransportedInRegionsRed = Object.fromEntries(
+        Object.keys(commandBehaviorState.patientTrays).map((region) => [
+            region,
+            minBetweenResourceDescriptions(
+                {
+                    black: 0,
+                    blue: 0,
+                    green: 0,
+                    red: 100,
+                    white: 0,
+                    yellow: 0,
+                },
+                subtractResourceDescription(
+                    commandBehaviorState.patientsExpectedInRegions[region] ??
+                        emptyPatientResourceDescription,
+                    commandBehaviorState.patientsTransportedFromRegions[
+                        region
+                    ] ?? emptyPatientResourceDescription
+                )
+            ),
+        ])
+    );
+
+    allocatedVehicles = calculateVehicleAllocationForHospitalTransport(
+        assumedPatientsNotTransportedInRegionsRed,
+        remainingAvailableVehicles
+    );
+
+    if (totalResources(remainingAvailableVehicles) > 0) {
+        logBehavior(
+            draftState,
+            [],
+            `Die folgenden Fahrzeuge: ${displayAnyPerRegion(
+                allocatedVehicles,
+                draftState
+            )} wurden basierend auf den folgenden Patientenzahlen: ${displayAnyPerRegion(
+                assumedPatientsNotTransportedInRegionsRed,
+                draftState
+            )}zum Patientenabtransport roter Patienten versendet. Die folgenden Fahrzeuge standen zur Verfügung:${JSON.stringify(
+                remainingAvailableVehicles
+            )}`,
+            simulatedRegion.id,
+            commandBehaviorState.id
+        );
+    }
+
+    Object.entries(allocatedVehicles).forEach(([region, vehicles]) => {
+        sendVehiclesToRegion(
+            region,
+            vehicles,
+            simulatedRegion,
+            commandBehaviorState,
+            draftState,
+            true
+        );
+        commandBehaviorState.patientsTransportedFromRegions[region] =
+            patientsAfterTransport(
+                commandBehaviorState.patientsTransportedFromRegions[region] ??
+                    emptyPatientResourceDescription,
+                vehicles
+            );
+    });
+
+    allocatedVehicles = {};
+    // TODO: Delete Vehicles if used
+    if (Object.entries(allocatedVehicles).length > 0) {
+        return;
+    }
+
     for (const personnelType of [
         'notarzt',
         'notSan',
@@ -707,13 +626,10 @@ function assignVehicleBudgets(
                     : 0),
         ]) as [UUID, number][];
 
-        console.log(
-            `[${personnelType}] ${JSON.stringify(assumedNeedsInRegion)}`
-        );
-
         while (areVehiclesLeft(usableVehicles, remainingAvailableVehicles)) {
             // TODO: Regions with no personnel have highest need
             // TODO: B raum nicht überfordern
+            // TODO: also send when no data but v in braum
             assumedNeedsInRegion.sort(([_a, a], [_b, b]) => b - a);
             if (!assumedNeedsInRegion[0] || assumedNeedsInRegion[0][1] <= 0) {
                 break;
@@ -768,7 +684,7 @@ function assignVehicleBudgets(
             )} wurden basierend auf den folgenden Patientenzahlen: ${displayAnyPerRegion(
                 assumedPatientsInRegion,
                 draftState
-            )}welche die folgenden Bedürfnisse infuzieren: ${displayAnyPerRegion(
+            )}welche die folgenden Bedürfnisse indizieren: ${displayAnyPerRegion(
                 logNeedValue,
                 draftState
             )} versendet. Die folgenden Fahrzeuge standen zur Verfügung:${JSON.stringify(
@@ -790,8 +706,6 @@ function assignVehicleBudgets(
         )
     );
 
-    allocatedVehicles = {};
-
     // Transport to hospital
 
     const assumedPatientsNotTransportedInRegions = Object.fromEntries(
@@ -806,70 +720,12 @@ function assignVehicleBudgets(
         ])
     );
 
-    for (const patientStatus of ['red', 'yellow', 'green'] as PatientStatus[]) {
-        usableVehicles.clear();
-        Object.entries(transportablePatients).forEach(([type, patients]) => {
-            if (patients[patientStatus] > 0) {
-                usableVehicles.add(type);
-            }
-        });
+    allocatedVehicles = calculateVehicleAllocationForHospitalTransport(
+        assumedPatientsNotTransportedInRegions,
+        remainingAvailableVehicles
+    );
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-        const assumedPatientsOfCategoryNotTransportedInRegions = Object.entries(
-            assumedPatientsNotTransportedInRegions
-        ).map(([region, patients]) => [region, patients[patientStatus]]) as [
-            UUID,
-            number
-        ][];
-
-        while (areVehiclesLeft(usableVehicles, remainingAvailableVehicles)) {
-            // TODO: Regions with no personnel have highest need
-            assumedPatientsOfCategoryNotTransportedInRegions.sort(
-                ([_a, a], [_b, b]) => b - a
-            );
-            if (
-                !assumedPatientsOfCategoryNotTransportedInRegions[0] ||
-                assumedPatientsOfCategoryNotTransportedInRegions[0][1] <= 0
-            ) {
-                break;
-            }
-            const region =
-                assumedPatientsOfCategoryNotTransportedInRegions[0][0];
-            // TODO: use vehicle that fits best
-            const wantedVehicle = Object.entries(
-                remainingAvailableVehicles
-            ).filter(
-                ([vehicleType, vehicleCount]) =>
-                    usableVehicles.has(vehicleType) && vehicleCount > 0
-            )[0]![0];
-
-            if (!allocatedVehicles[region]) {
-                allocatedVehicles[region] = {};
-            }
-            if (!allocatedVehicles[region]![wantedVehicle]) {
-                allocatedVehicles[region]![wantedVehicle] = 1;
-            } else {
-                allocatedVehicles[region]![wantedVehicle]++;
-            }
-            remainingAvailableVehicles[wantedVehicle]--;
-
-            assumedPatientsOfCategoryNotTransportedInRegions[0][1]--;
-
-            const res = cloneDeepMutable(
-                commandBehaviorState.patientsTransportedFromRegions[region]
-                    ? commandBehaviorState.patientsTransportedFromRegions[
-                          region
-                      ]!
-                    : emptyPatientResourceDescription
-            );
-            res[patientStatus] +=
-                transportablePatients[wantedVehicle]![patientStatus];
-
-            commandBehaviorState.patientsTransportedFromRegions[region] = res;
-        }
-    }
-
-    if (Object.keys(allocatedVehicles).length > 0) {
+    if (totalResources(remainingAvailableVehicles) > 0) {
         logBehavior(
             draftState,
             [],
@@ -879,8 +735,8 @@ function assignVehicleBudgets(
             )} wurden basierend auf den folgenden Patientenzahlen: ${displayAnyPerRegion(
                 assumedPatientsNotTransportedInRegions,
                 draftState
-            )}zum PAtientenabtransport versendet. Die folgenden Fahrzeuge standen zur Verfügung:${JSON.stringify(
-                logVehicleValue
+            )}zum Patientenabtransport versendet. Die folgenden Fahrzeuge standen zur Verfügung:${JSON.stringify(
+                remainingAvailableVehicles
             )}`,
             simulatedRegion.id,
             commandBehaviorState.id
@@ -888,7 +744,7 @@ function assignVehicleBudgets(
     }
 
     // TODO: Send excess requested vehicles if no more need determined (not if EV secured)
-    Object.entries(allocatedVehicles).forEach(([region, vehicles]) =>
+    Object.entries(allocatedVehicles).forEach(([region, vehicles]) => {
         sendVehiclesToRegion(
             region,
             vehicles,
@@ -896,163 +752,12 @@ function assignVehicleBudgets(
             commandBehaviorState,
             draftState,
             true
-        )
-    );
-}
-
-function totalPatientsInRegion(
-    simulatedRegionId: UUID,
-    commandBehaviorState: CommandBehaviorState
-): number {
-    return Object.values(
-        commandBehaviorState.patientsExpectedInRegions[simulatedRegionId] ?? {}
-    ).reduce(
-        (totalPatients, patientsOfCategory) =>
-            totalPatients + patientsOfCategory,
-        0
-    );
-}
-
-function personnelNeedsFromPatients(
-    patients: ResourceDescription<PatientStatus>
-): ResourceDescription<PersonnelType> {
-    return ceilResourceDescription(
-        StrictObject.entries(patients).reduce(
-            (totalPersonnelNeeds, [category, patientsOfCategory]) =>
-                addResourceDescription(
-                    totalPersonnelNeeds,
-                    scaleResourceDescription(
-                        assumedPatientPersonnelNeeds[category],
-                        patientsOfCategory
-                    )
-                ),
-            {
-                gf: 0,
-                notarzt: 0,
-                notSan: 0,
-                rettSan: 0,
-                san: 0,
-            }
-        )
-    );
-}
-
-function isRegionExpectedToNOTGetALeader(
-    commandBehaviorState: CommandBehaviorState,
-    simulatedRegionId: UUID
-): boolean {
-    return (
-        (commandBehaviorState.vehiclesExpectedInRegions[simulatedRegionId] ===
-            undefined ||
-            !Object.values(
-                commandBehaviorState.vehiclesExpectedInRegions[
-                    simulatedRegionId
-                ]!
-            ).some((amount) => amount > 0)) &&
-        (commandBehaviorState.vehiclesOnTheWayToRegions[simulatedRegionId] ===
-            undefined ||
-            !Object.values(
-                commandBehaviorState.vehiclesOnTheWayToRegions[
-                    simulatedRegionId
-                ]!
-            ).some((amount) => amount > 0))
-    );
-}
-
-function personnelExpectedToGetToRegion(
-    simulatedRegionId: UUID,
-    commandBehaviorState: CommandBehaviorState
-): ResourceDescription<PersonnelType> {
-    const vehiclesExpectedToBeInRegion = addPartialResourceDescriptions([
-        commandBehaviorState.vehiclesExpectedInRegions[simulatedRegionId] ?? {},
-        commandBehaviorState.vehiclesOnTheWayToRegions[simulatedRegionId] ?? {},
-    ]) as ResourceDescription;
-    return vehiclesToPersonnel(vehiclesExpectedToBeInRegion);
-}
-
-function vehiclesToPersonnel(
-    vehicles: ResourceDescription
-): ResourceDescription<PersonnelType> {
-    return Object.entries(vehicles).reduce(
-        (totalPersonnel, [vehicleType, vehicleCount]) =>
-            addResourceDescription(
-                totalPersonnel,
-                scaleResourceDescription(
-                    personnelInVehicles[vehicleType] ?? {
-                        gf: 0,
-                        notarzt: 0,
-                        notSan: 0,
-                        rettSan: 0,
-                        san: 0,
-                    },
-                    vehicleCount
-                )
-            ),
-        {
-            gf: 0,
-            notarzt: 0,
-            notSan: 0,
-            rettSan: 0,
-            san: 0,
-        }
-    );
-}
-
-function areVehiclesLeft(
-    vehicleTypes: Set<string>,
-    vehicles: ResourceDescription
-): boolean {
-    return Object.entries(vehicles).some(
-        ([vehicleType, vehicleCount]) =>
-            vehicleTypes.has(vehicleType) && vehicleCount > 0
-    );
-}
-
-function noMorePersonnelNeeded(
-    personnel: ResourceDescription<PersonnelType>
-): boolean {
-    let n = 0;
-    for (const personnelType of [
-        'notarzt',
-        'notSan',
-        'rettSan',
-        'san',
-    ] as PersonnelType[]) {
-        n += personnel[personnelType];
-        if (n > 0) {
-            return false;
-        }
-    }
-    return true;
-}
-
-function canStartTransport(
-    commandBehaviorState: Mutable<CommandBehaviorState>,
-    assignedPersonnel: {
-        [region: UUID]: ResourceDescription<PersonnelType>;
-    }
-): boolean {
-    return (
-        Object.values(assignedPersonnel).every(noMorePersonnelNeeded) &&
-        Object.keys(commandBehaviorState.patientTraysWithInformation).length ===
-            Object.keys(commandBehaviorState.patientTrays).length
-    );
-}
-
-function displayAnyPerRegion(
-    value: {
-        [simulatedRegionId: UUID]: any;
-    },
-    draftState: Mutable<ExerciseState>
-): string {
-    let s = '';
-    Object.entries(value).forEach(([simulatedRegionId, val]) => {
-        const simulatedRegionName = getElement(
-            draftState,
-            'simulatedRegion',
-            simulatedRegionId
-        ).name;
-        s += ` [${simulatedRegionName}]: ${JSON.stringify(val)}`;
+        );
+        commandBehaviorState.patientsTransportedFromRegions[region] =
+            patientsAfterTransport(
+                commandBehaviorState.patientsTransportedFromRegions[region] ??
+                    emptyPatientResourceDescription,
+                vehicles
+            );
     });
-    return s;
 }

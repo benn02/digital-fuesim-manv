@@ -61,6 +61,7 @@ import { ManagePatientTransportToHospitalManagedRegionsTableComponent } from './
 import { ManagePatientTransportToHospitalVehiclesForCategoriesEditorComponent } from './tabs/behavior-tab/behaviors/manage-patient-transport-to-hospital/shared/manage-patient-transport-to-hospital-vehicles-for-categories-editor/manage-patient-transport-to-hospital-vehicles-for-categories-editor.component';
 import { ManagePatientTransportToHospitalSettingsEditorComponent } from './tabs/behavior-tab/behaviors/manage-patient-transport-to-hospital/shared/manage-patient-transport-to-hospital-settings-editor/manage-patient-transport-to-hospital-settings-editor.component';
 import { SimulatedRegionOverviewBehaviorCommandComponent } from './tabs/behavior-tab/behaviors/command/simulated-region-overview-behavior-command.component';
+import { SimulatedRegionOverviewBehaviorInterfaceSignallerComponent } from './tabs/behavior-tab/behaviors/interface-signaller/simulated-region-overview-behavior-interface-signaller.component';
 
 @NgModule({
     declarations: [
@@ -112,6 +113,7 @@ import { SimulatedRegionOverviewBehaviorCommandComponent } from './tabs/behavior
         ManagePatientTransportToHospitalVehiclesForCategoriesEditorComponent,
         ManagePatientTransportToHospitalSettingsEditorComponent,
         SimulatedRegionOverviewBehaviorCommandComponent,
+        SimulatedRegionOverviewBehaviorInterfaceSignallerComponent,
     ],
     imports: [
         FormsModule,

@@ -695,6 +695,54 @@ export class RemoveStagingAreaFromCommandAction implements Action {
     public readonly stagingAreaId!: UUID;
 }
 
+export class AddAlarmGroupToInterfaceSignallerAction implements Action {
+    @IsValue('[InterfaceSignallerBehavior] Add Alarm Group')
+    public readonly type = '[InterfaceSignallerBehavior] Add Alarm Group';
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly simulatedRegionId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly behaviorId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly alarmGroupId!: UUID;
+}
+
+export class RemoveAlarmGroupToInterfaceSignallerAction implements Action {
+    @IsValue('[InterfaceSignallerBehavior] Remove Alarm Group')
+    public readonly type = '[InterfaceSignallerBehavior] Remove Alarm Group';
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly simulatedRegionId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly behaviorId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly alarmGroupId!: UUID;
+}
+
+export class ChangeAlarmGroupThresholdForInterfaceSignallerAction
+    implements Action
+{
+    @IsValue('[InterfaceSignallerBehavior] Change Alarm Group Threshold')
+    public readonly type =
+        '[InterfaceSignallerBehavior] Change Alarm Group Threshold';
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly simulatedRegionId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly behaviorId!: UUID;
+
+    @IsUUID(4, uuidValidationOptions)
+    public readonly alarmGroupId!: UUID;
+
+    @IsInt()
+    public readonly newThreshold!: number;
+}
+
 export class DebugAction implements Action {
     @IsValue('[Debug] Debug')
     public readonly type = '[Debug] Debug';
@@ -2436,6 +2484,66 @@ export namespace SimulationActionReducers {
                 );
 
                 delete behaviorState.stagingAreas[stagingAreaId];
+                return draftState;
+            },
+            rights: 'trainer',
+        };
+
+    export const addAlarmGroupToInterfaceSignaller: ActionReducer<AddAlarmGroupToInterfaceSignallerAction> =
+        {
+            action: AddAlarmGroupToInterfaceSignallerAction,
+            reducer(
+                draftState,
+                { simulatedRegionId, behaviorId, alarmGroupId }
+            ) {
+                const behaviorState = getBehaviorById(
+                    draftState,
+                    simulatedRegionId,
+                    behaviorId,
+                    'interfaceSignallerBehavior'
+                );
+
+                behaviorState.knownAlarmGroups[alarmGroupId] = 100;
+                return draftState;
+            },
+            rights: 'trainer',
+        };
+
+    export const changeAlarmGroupThresholdForInterfaceSignaller: ActionReducer<ChangeAlarmGroupThresholdForInterfaceSignallerAction> =
+        {
+            action: ChangeAlarmGroupThresholdForInterfaceSignallerAction,
+            reducer(
+                draftState,
+                { simulatedRegionId, behaviorId, alarmGroupId, newThreshold }
+            ) {
+                const behaviorState = getBehaviorById(
+                    draftState,
+                    simulatedRegionId,
+                    behaviorId,
+                    'interfaceSignallerBehavior'
+                );
+
+                behaviorState.knownAlarmGroups[alarmGroupId] = newThreshold;
+                return draftState;
+            },
+            rights: 'trainer',
+        };
+
+    export const removeAlarmGroupToInterfaceSignallerAction: ActionReducer<RemoveAlarmGroupToInterfaceSignallerAction> =
+        {
+            action: RemoveAlarmGroupToInterfaceSignallerAction,
+            reducer(
+                draftState,
+                { simulatedRegionId, behaviorId, alarmGroupId }
+            ) {
+                const behaviorState = getBehaviorById(
+                    draftState,
+                    simulatedRegionId,
+                    behaviorId,
+                    'interfaceSignallerBehavior'
+                );
+
+                delete behaviorState.knownAlarmGroups[alarmGroupId];
                 return draftState;
             },
             rights: 'trainer',

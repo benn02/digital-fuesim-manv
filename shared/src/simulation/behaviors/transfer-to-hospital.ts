@@ -137,6 +137,13 @@ export const transferToHospitalBehavior: SimulationBehavior<TransferToHospitalBe
                     break;
                 }
                 case 'tickEvent': {
+                    if (
+                        Object.keys(behaviorState.patientIdsSelectedForTransfer)
+                            .length === 0
+                    ) {
+                        // Only do if necessary
+                        return;
+                    }
                     const patients = getOwnPatients(
                         draftState,
                         simulatedRegion.id

@@ -11,5 +11,5 @@ export * from './request';
 export * from './transfer';
 export * from './transfer-to-hospital';
 export * from './manage-patient-transport-to-hospital';
-export * from './command';
+export * from './command/command';
 export * from './interface-signaller';
