@@ -3,9 +3,9 @@ import type { PersonnelType } from '../../../models/utils/personnel-type';
 import type { ResourceDescription } from '../../../models/utils/resource-description';
 import type { UUID } from '../../../utils/uuid';
 
-export const COLLECT_PATIENT_DATA_INTERVAL = 15 * 60 * 1000;
+export const COLLECT_PATIENT_DATA_INTERVAL = 5 * 60 * 1000;
 export const COLLECT_VEHICLE_DATA_INTERVAL = 5 * 60 * 1000;
-export const COLLECT_VEHICLE_DATA_INTERVAL_PT = 1 * 60 * 1000;
+export const COLLECT_VEHICLE_DATA_INTERVAL_PT = 5 * 60 * 1000;
 
 export type stage =
     | 'contactInitiation'
