@@ -417,7 +417,7 @@ function assignVehicleBudgets(
     );
 
     if (!averagePatientTraySize) {
-        averagePatientTraySize = 5; // TODO: Magic Number
+        averagePatientTraySize = 1; // TODO: Magic Number
     }
 
     const assumedNumPatients =
