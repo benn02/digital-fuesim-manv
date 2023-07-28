@@ -126,7 +126,7 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
             case 'tickEvent':
                 {
                     behaviorState.ticks++;
-                    if (behaviorState.ticks === 5) {
+                    if (behaviorState.ticks === 20 * 60) {
                         behaviorState.ticks = 0;
                         assignVehicleBudgets(
                             behaviorState,
