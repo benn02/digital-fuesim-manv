@@ -108,6 +108,9 @@ export class CommandBehaviorState implements SimulationBehaviorState {
     @IsInt()
     public readonly alarmGroupPatients: number = 0;
 
+    @IsInt()
+    public readonly ticks: number = 0;
+
     static readonly create = getCreate(this);
 }
 
@@ -122,6 +125,15 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                 break;
             case 'tickEvent':
                 {
+                    behaviorState.ticks++;
+                    if (behaviorState.ticks === 300) {
+                        behaviorState.ticks = 0;
+                        assignVehicleBudgets(
+                            behaviorState,
+                            draftState,
+                            simulatedRegion
+                        );
+                    }
                     Object.keys(behaviorState.patientTrays)
                         .filter(
                             (patientTray) =>
@@ -130,14 +142,14 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                                 ]
                         )
                         .forEach((patientTray) => {
-                            issueCommand(
+                            /*issueCommand(
                                 simulatedRegion,
                                 draftState,
                                 PatientDataRequestedCommandEvent.create(
                                     patientTray,
                                     true
                                 )
-                            );
+                            );*/
                             behaviorState.patientTraysContacted[patientTray] =
                                 true;
                         });
@@ -189,11 +201,6 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                         simulatedRegion,
                         draftState
                     );
-                    assignVehicleBudgets(
-                        behaviorState,
-                        draftState,
-                        simulatedRegion
-                    );
                 }
                 break;
             case 'vehicleDataReceivedEvent':
@@ -209,11 +216,6 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                         behaviorState.id
                     );
                     handleVehicleDataReceived(behaviorState, event);
-                    assignVehicleBudgets(
-                        behaviorState,
-                        draftState,
-                        simulatedRegion
-                    );
                 }
                 break;
             case 'treatmentProgressDataReceivedEvent':
@@ -277,11 +279,6 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                         simulatedRegion.id,
                         behaviorState.id
                     );
-                    assignVehicleBudgets(
-                        behaviorState,
-                        draftState,
-                        simulatedRegion
-                    );
                 }
                 break;
             case 'resourceRequestDataReceivedEvent':
@@ -295,11 +292,6 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
                         `Es wurde eine Fahrzeuganfrage erhallten`,
                         simulatedRegion.id,
                         behaviorState.id
-                    );
-                    assignVehicleBudgets(
-                        behaviorState,
-                        draftState,
-                        simulatedRegion
                     );
                 }
                 break;
@@ -340,12 +332,19 @@ function handleVehicleDataReceived(
         console.log('Error in command behavior staging area not answering');
         return;
     }
+    let vehiclesInRegion = vehicleDataReceivedEvent.vehiclesInRegion;
     // Update data
     if (
         commandBehaviorState.stagingAreas[
             vehicleDataReceivedEvent.simulatedRegion
         ]
     ) {
+        // Remove SA Leader
+        vehiclesInRegion = subtractPartialResourceDescriptions(
+            vehiclesInRegion,
+            { RTW: 1 }
+        ) as ResourceDescription;
+
         commandBehaviorState.totalVehiclesInStagingAreas =
             subtractPartialResourceDescriptions(
                 commandBehaviorState.totalVehiclesInStagingAreas,
@@ -357,12 +356,12 @@ function handleVehicleDataReceived(
         commandBehaviorState.totalVehiclesInStagingAreas =
             addPartialResourceDescriptions([
                 commandBehaviorState.totalVehiclesInStagingAreas,
-                vehicleDataReceivedEvent.vehiclesInRegion,
+                vehiclesInRegion,
             ]) as ResourceDescription;
     }
 
     const newVehicles = subtractPartialResourceDescriptions(
-        vehicleDataReceivedEvent.vehiclesInRegion,
+        vehiclesInRegion,
         commandBehaviorState.vehiclesExpectedInRegions[
             vehicleDataReceivedEvent.simulatedRegion
         ] ?? {}
@@ -380,7 +379,7 @@ function handleVehicleDataReceived(
     );
     commandBehaviorState.vehiclesExpectedInRegions[
         vehicleDataReceivedEvent.simulatedRegion
-    ] = vehicleDataReceivedEvent.vehiclesInRegion;
+    ] = vehiclesInRegion;
 }
 
 function assignVehicleBudgets(
@@ -514,7 +513,7 @@ function assignVehicleBudgets(
         commandBehaviorState.vehiclesRequestedByRegions
     );
 
-    const remainingAvailableVehicles = subtractPartialResourceDescriptions(
+    let remainingAvailableVehicles = subtractPartialResourceDescriptions(
         commandBehaviorState.totalVehiclesInStagingAreas,
         addPartialResourceDescriptions(
             Object.values(commandBehaviorState.vehiclesOnTheWayToRegions)
@@ -542,7 +541,7 @@ function assignVehicleBudgets(
                     black: 0,
                     blue: 0,
                     green: 0,
-                    red: 100,
+                    red: 0,
                     white: 0,
                     yellow: 0,
                 },
@@ -597,11 +596,17 @@ function assignVehicleBudgets(
             );
     });
 
+    const totalAllocatedVehicles = addPartialResourceDescriptions(
+        Object.values(allocatedVehicles)
+    );
+    remainingAvailableVehicles = cloneDeep(
+        subtractPartialResourceDescriptions(
+            remainingAvailableVehicles,
+            totalAllocatedVehicles
+        ) as ResourceDescription
+    );
+
     allocatedVehicles = {};
-    // TODO: Delete Vehicles if used
-    if (Object.entries(allocatedVehicles).length > 0) {
-        return;
-    }
 
     for (const personnelType of [
         'notarzt',

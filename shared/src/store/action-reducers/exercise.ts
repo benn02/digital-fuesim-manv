@@ -108,37 +108,42 @@ export namespace ExerciseActionReducers {
 
             // Refresh patient status
             patientUpdates.forEach((patientUpdate) => {
-                const currentPatient = draftState.patients[patientUpdate.id]!;
+                const currentPatient = draftState.patients[patientUpdate.id];
 
-                const visibleStatusBefore = Patient.getVisibleStatus(
-                    currentPatient,
-                    draftState.configuration.pretriageEnabled,
-                    draftState.configuration.bluePatientsEnabled
-                );
-
-                currentPatient.currentHealthStateId = patientUpdate.nextStateId;
-                currentPatient.health = patientUpdate.nextHealthPoints;
-                currentPatient.stateTime = patientUpdate.nextStateTime;
-                currentPatient.treatmentTime = patientUpdate.treatmentTime;
-                currentPatient.realStatus = getStatus(currentPatient.health);
-
-                const visibleStatusAfter = Patient.getVisibleStatus(
-                    currentPatient,
-                    draftState.configuration.pretriageEnabled,
-                    draftState.configuration.bluePatientsEnabled
-                );
-                // Save this to the state because the treatments aren't refreshed in every tick
-                currentPatient.visibleStatusChanged =
-                    visibleStatusBefore !== visibleStatusAfter;
-                if (
-                    // We only want to do this expensive calculation, when it is really necessary
-                    currentPatient.visibleStatusChanged
-                ) {
-                    updateTreatments(draftState, currentPatient);
-                    logPatientVisibleStatusChanged(
-                        draftState,
-                        currentPatient.id
+                if (currentPatient) {
+                    const visibleStatusBefore = Patient.getVisibleStatus(
+                        currentPatient,
+                        draftState.configuration.pretriageEnabled,
+                        draftState.configuration.bluePatientsEnabled
                     );
+
+                    currentPatient.currentHealthStateId =
+                        patientUpdate.nextStateId;
+                    currentPatient.health = patientUpdate.nextHealthPoints;
+                    currentPatient.stateTime = patientUpdate.nextStateTime;
+                    currentPatient.treatmentTime = patientUpdate.treatmentTime;
+                    currentPatient.realStatus = getStatus(
+                        currentPatient.health
+                    );
+
+                    const visibleStatusAfter = Patient.getVisibleStatus(
+                        currentPatient,
+                        draftState.configuration.pretriageEnabled,
+                        draftState.configuration.bluePatientsEnabled
+                    );
+                    // Save this to the state because the treatments aren't refreshed in every tick
+                    currentPatient.visibleStatusChanged =
+                        visibleStatusBefore !== visibleStatusAfter;
+                    if (
+                        // We only want to do this expensive calculation, when it is really necessary
+                        currentPatient.visibleStatusChanged
+                    ) {
+                        updateTreatments(draftState, currentPatient);
+                        logPatientVisibleStatusChanged(
+                            draftState,
+                            currentPatient.id
+                        );
+                    }
                 }
             });
 

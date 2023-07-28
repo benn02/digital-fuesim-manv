@@ -6,17 +6,17 @@
     class="modal-body"
     style="height: min(80vh, 2000px); max-height: min(80vh, 2000px)"
 >
-    <div class="d-flex flex-row w-100 h-100">
+    <div class="d-flex flex-row w-75 h-100 overflow-hidden">
         <div
-            class="w-50 mw-50 me-3 flex-grow-1 flex-shrink-1 h-100 d-flex flex-column"
+            class="me-3 flex-grow-1 flex-shrink-1 h-100 d-flex flex-column overflow-hidden"
         >
             <nav #nav="ngbNav" ngbNav class="nav-tabs">
                 <ng-container ngbNavItem="areas">
                     <a ngbNavLink>Einsatzbereiche</a>
-                    <ng-template ngbNavContent>
+                    <ng-template ngbNavContent class="overflow-hidden">
                         <div
                             ngbDropdown
-                            class="d-inline-block"
+                            class="d-inline-block overflow-hidden"
                             *ngIf="
                                 areaStatisticsService.areaSpec$
                                     | async as areaSpec
@@ -106,23 +106,6 @@
                             *ngIf="patientsStatistics$ | async as statistics"
                             [statistics]="statistics"
                         ></app-stacked-bar-chart>
-                        <br />
-                        <h3>Fahrzeuge</h3>
-                        <app-stacked-bar-chart
-                            *ngIf="vehiclesStatistics$ | async as statistics"
-                            [statistics]="statistics"
-                        ></app-stacked-bar-chart>
-                        <br />
-                        <h3>
-                            Einsatzkräfte
-                            <small class="text-muted"
-                                >(weder im Transfer noch im Fahrzeug)</small
-                            >
-                        </h3>
-                        <app-stacked-bar-chart
-                            *ngIf="personnelStatistics$ | async as statistics"
-                            [statistics]="statistics"
-                        ></app-stacked-bar-chart>
                     </ng-template>
                 </ng-container>
                 <ng-container ngbNavItem="hospitals">
@@ -138,13 +121,6 @@
                 class="mt-2 flex-grow-1 flex-shrink-1 mh-100 overflow-auto statistics-nav-outlet"
                 style="min-height: 0"
             ></div>
-        </div>
-        <div class="vr"></div>
-        <div class="w-50 mw-50 h-100 mh-100 ps-3">
-            <app-log-table
-                *ngIf="logEntries$ | async as logEntries"
-                [logEntries]="logEntries"
-            />
         </div>
     </div>
 </div>
