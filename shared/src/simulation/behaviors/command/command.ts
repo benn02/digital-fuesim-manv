@@ -126,7 +126,7 @@ export const commandBehavior: SimulationBehavior<CommandBehaviorState> = {
             case 'tickEvent':
                 {
                     behaviorState.ticks++;
-                    if (behaviorState.ticks === 5) {
+                    if (behaviorState.ticks === 20 * 60) {
                         behaviorState.ticks = 0;
                         assignVehicleBudgets(
                             behaviorState,
@@ -417,7 +417,7 @@ function assignVehicleBudgets(
     );
 
     if (!averagePatientTraySize) {
-        averagePatientTraySize = 1; // TODO: Magic Number
+        averagePatientTraySize = 20; // TODO: Magic Number
     }
 
     const assumedNumPatients =
