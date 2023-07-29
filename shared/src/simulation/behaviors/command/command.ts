@@ -540,7 +540,7 @@ function assignVehicleBudgets(
                 {
                     black: 0,
                     blue: 0,
-                    green: 0,
+                    green: 100,
                     red: 100,
                     white: 0,
                     yellow: 100,
